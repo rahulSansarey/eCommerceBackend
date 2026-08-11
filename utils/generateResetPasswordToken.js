@@ -6,7 +6,7 @@ export const generateResetPasswordToken = () => {
     .update(resetToken)
     .digest("hex");
 
-    const resetPasswordExpireTime= Date.now() + 15 * 60 * 1000; // 15 minutes from now
+  const resetPasswordExpireTime = Date.now() + 15 * 60 * 1000; // 15 minutes from now
 
   return { resetToken, hashedToken, resetPasswordExpireTime };
 };

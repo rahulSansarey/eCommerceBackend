@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import { generateToken } from "../utils/jwtToken.js";
 import { generateResetPasswordToken } from "../utils/generateResetPasswordToken.js";
 import { generateEmailTemplate } from "../utils/generateForgotPasswordEmailTemplate.js";
+import { sendEmail } from "../utils/sendEmail.js"; // adjust path to match your actual file location
 
 // Register module starts here
 export const register = catchAsynError(async (req, res, next) => {
@@ -88,7 +89,7 @@ export const logout = catchAsynError(async (req, res, next) => {
 
 export const forgotPassword = catchAsynError(async (req, res, next) => {
   const { email } = req.body;
-  const { frontendUrl } = req.body;
+  const { frontendUrl } = req.query;
   const userResult = await database.query(
     `SELECT * FROM users WHERE email = $1`,
     [email],
@@ -110,20 +111,25 @@ export const forgotPassword = catchAsynError(async (req, res, next) => {
     ],
   );
 
-  const resetPasswordUrl = `${frontendUrl}/reset-password/${resetToken}`;
+  const resetPasswordUrl = `${frontendUrl}/password/reset/${resetToken}`;
   const message = generateEmailTemplate(resetPasswordUrl);
 
   try {
     await sendEmail({
-      to: user.email,
+      email: user.email,
       subject: "Ecommerce Password Recovery",
-      message: message,
+      message,
     });
     res.status(200).json({
       success: true,
       message: `Email sent to ${user.email} successfully`,
     });
   } catch (error) {
+    console.error("sendEmail error:", error);
+    console.error("sendEmail error message:", error.message);
+    console.error("sendEmail error code:", error.code);
+    console.error("sendEmail responseCode:", error.responseCode);
+    console.error("sendEmail response:", error.response);
     await database.query(
       `UPDATE users SET reset_password_token = NULL, reset_password_expire = NULL WHERE email = $1`,
       [email],
